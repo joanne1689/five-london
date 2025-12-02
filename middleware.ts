@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const BOT_UA =
-  /(googlebot|bingbot|yandex|duckduckbot|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|whatsapp|telegrambot)/i;
+  /(googlebot|bingbot|yandex|duckduckbot|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|whatsapp|telegrambot|discordbot)/i;
 
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
@@ -10,30 +10,40 @@ export async function middleware(req: NextRequest) {
 
   // health check
   if (url.pathname === "/__probe") {
-    return new Response("OK from Vercel Prerender Middleware");
+    return new Response("OK from Vercel Prerender Middleware", {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain",
+      },
+    });
   }
 
   // skip humans
   const isBot = BOT_UA.test(ua);
   if (!isBot) return NextResponse.next();
 
-  const target = url.toString();
-
+  // call prerender.io
   const prerenderUrl = `https://service.prerender.io/${encodeURIComponent(
-    target
+    url.toString()
   )}`;
 
-  const resp = await fetch(prerenderUrl, {
-    headers: {
-      "X-Prerender-Token": process.env.PRERENDER_TOKEN!,
-      "User-Agent": ua,
-    },
-  });
+  try {
+    const prerenderResp = await fetch(prerenderUrl, {
+      method: "GET",
+      headers: {
+        "X-Prerender-Token": process.env.PRERENDER_TOKEN!,
+        "User-Agent": ua,
+      },
+    });
 
-  return new Response(resp.body, {
-    status: resp.status,
-    headers: resp.headers,
-  });
+    return new Response(prerenderResp.body, {
+      status: prerenderResp.status,
+      headers: prerenderResp.headers,
+    });
+  } catch (err) {
+    // if prerender fails, fall back to normal render
+    return NextResponse.next();
+  }
 }
 
 export const config = {
