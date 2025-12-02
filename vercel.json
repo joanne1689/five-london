@@ -1,6 +1,15 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/" }
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(googlebot|bingbot|yandexbot|duckduckbot|slackbot|twitterbot|linkedinbot|facebookexternalhit|discordbot)"
+        }
+      ],
+      "destination": "/api/prerender?target=https://five-london.vercel.app/$1"
+    }
   ]
 }

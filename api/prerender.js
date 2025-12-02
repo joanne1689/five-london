@@ -7,19 +7,16 @@ export default async function handler(req, res) {
 
   try {
     const prerenderToken = process.env.PRERENDER_TOKEN;
-    const apiUrl = `https://service.prerender.io/https%3A%2F%2F${encodeURIComponent(
-      target.replace(/^https?:\/\//, "")
+    const prerenderUrl = `https://service.prerender.io/${encodeURIComponent(
+      target
     )}`;
 
-    const prerenderRes = await fetch(apiUrl, {
-      headers: {
-        "X-Prerender-Token": prerenderToken,
-      },
+    const snapshot = await fetch(prerenderUrl, {
+      headers: { "X-Prerender-Token": prerenderToken },
     });
 
-    const html = await prerenderRes.text();
+    const html = await snapshot.text();
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-
     return res.status(200).send(html);
   } catch (err) {
     console.error("Prerender error:", err);
