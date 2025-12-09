@@ -10,6 +10,10 @@
         }
       ],
       "destination": "/api/prerender?target=https://five-london.vercel.app/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
